@@ -1,0 +1,36 @@
+kind: ReplicationController
+apiVersion: v1
+metadata:
+  name: minio
+  labels:
+    app: minio
+  namespace: koli-system
+spec:
+  replicas: 1
+  selector:
+    app: minio
+  template:
+    metadata:
+      labels:
+        app: minio
+    spec:
+      volumes:
+      - name: objectstorage-keyfile
+        secret:
+          secretName: objectstorage-keyfile
+      containers:
+      - name: minio
+        image: quay.io/deis/minio:v2.2.0
+        command:
+        - boot
+        args:
+        - server /home/minio/
+        ports:
+        - containerPort: 8082
+          protocol: TCP
+        volumeMounts:
+        - name: objectstorage-keyfile
+          readOnly: true
+          mountPath: "/var/run/secrets/deis/minio/user"
+        terminationMessagePath: "/dev/termination-log"
+        imagePullPolicy: IfNotPresent

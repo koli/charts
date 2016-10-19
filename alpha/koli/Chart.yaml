@@ -1,0 +1,13 @@
+name: koli
+version: v0.2.0-alpha
+description: Koli PaaS
+keywords:
+- paas
+home: https://kolibox.io/
+sources:
+- https://github.com/kolibox/charts
+- https://github.com/kolibox/koli
+maintainers:
+- name: Koli Team
+  email: engineering@kolibox.io
+engine: gotpl

@@ -1,0 +1,86 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: controller
+  namespace: koli-system
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: controller
+    spec:
+      containers:
+      - name: controller
+        image: "quay.io/koli/controller:{{ .Values.imageTag }}"
+        ports:
+        - containerPort: 8000
+        env:
+        - name: PYTHONPATH
+          value: /app
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: crafter
+  namespace: koli-system
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: crafter
+    spec:
+      containers:
+      - name: crafter
+        image: "quay.io/koli/crafter:{{ .Values.imageTag }}"
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DEBUG
+          value: 'true'
+        - name: CLUSTER_ID
+          value: git
+        - name: BUILDER_STORAGE
+          value: minio
+        - name: SLUGBUILDER_IMAGE_NAME
+          value: 'quay.io/koli/slugbuilder:v0.1.0-alpha'
+        - name: SLUGDEPLOYER_IMAGE_NAME
+          value: 'quay.io/koli/slugdeployer:v0.1.0-alpha'
+        - name: SLUGRUNNER_IMAGE_NAME
+          value: 'quay.io/koli/slugrunner:v0.1.0-alpha'
+        - name: S3_HOST
+          value: 10.0.0.25
+        - name: S3_PORT
+          value: '9000'
+        # Will be removed in the future, needed to start the application
+        - name: LOCAL_OBJECT_STORE_PATH
+          value: /dummy
+        # Will be removed in the future, needed to start the application
+        - name: OBJECT_STORE_PATH
+          value: /dummy
+        - name: ACCESS_KEY
+          value: 8TZRY2JRWMPT6UMXR6I5
+        - name: ACCESS_SECRET_KEY
+          value: gbstrOvotMMcg2sMfGUhA5a6Et/EI5ALtIHsobYk
+        - name: GIT_HOME
+          value: /opt
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: api-router
+  namespace: koli-system
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: api-router
+    spec:
+      containers:
+      - name: api-router
+        image: "quay.io/koli/api-router:{{ .Values.imageTag }}"
+        ports:
+        - containerPort: 80
+        - containerPort: 443

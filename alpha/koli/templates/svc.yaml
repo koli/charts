@@ -1,0 +1,69 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: controller
+  labels:
+    app: controller
+  namespace: koli-system
+spec:
+  clusterIP: 'None'
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000
+  selector:
+    app: controller
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: crafter
+  labels:
+    app: crafter
+  namespace: koli-system
+spec:
+  clusterIP: 'None'
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+  selector:
+    app: crafter
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: api-router
+  labels:
+    app: api-router
+  namespace: koli-system
+spec:
+  ports:
+  - protocol: TCP
+    name: http
+    port: 7080
+    targetPort: 80
+    nodePort: 30080
+  - protocol: TCP
+    name: https
+    port: 6443
+    targetPort: 443
+    nodePort: 30443
+  selector:
+    app: api-router
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: minio
+  labels:
+    app: minio
+  namespace: koli-system
+spec:
+  clusterIP: 'None'
+  ports:
+  - protocol: TCP
+    port: 9000
+    targetPort: 9000
+  selector:
+    app: minio
