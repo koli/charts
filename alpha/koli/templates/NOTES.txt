@@ -14,14 +14,14 @@ https://devcenter.heroku.com/start
 3. Create a new deploy and start building an application
 
 	git clone https://github.com/heroku/node-js-getting-started.git
-    cd node-js-getting-started
+	cd node-js-getting-started
 	koli create deploy node
 	git push koli master
 
 4. Create a new addon and expose to the 'default' namespace
 
 	koli create addon redis
-    koli create links redis
+	koli create links redis
 
 5. Check it out
 
