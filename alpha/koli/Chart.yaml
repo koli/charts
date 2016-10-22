@@ -1,3 +1,4 @@
+apiVersion: v1
 name: koli
 version: v0.2.0-alpha
 description: Koli PaaS
