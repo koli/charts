@@ -38,8 +38,8 @@ metadata:
     app: api-router
   namespace: koli-system
 spec:
-  ports:
   type: NodePort
+  ports:
   - protocol: TCP
     name: http
     port: 7080
