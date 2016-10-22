@@ -39,6 +39,7 @@ metadata:
   namespace: koli-system
 spec:
   ports:
+  type: NodePort
   - protocol: TCP
     name: http
     port: 7080
