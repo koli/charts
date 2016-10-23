@@ -2,7 +2,6 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: controller
-  namespace: koli-system
 spec:
   replicas: 1
   template:
@@ -18,12 +17,16 @@ spec:
         env:
         - name: PYTHONPATH
           value: /app
+        - name: SYSTEM_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: systemtoken
+              key: token
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: crafter
-  namespace: koli-system
 spec:
   replicas: 1
   template:
@@ -33,7 +36,7 @@ spec:
     spec:
       containers:
       - name: crafter
-        image: "quay.io/koli/crafter:{{ .Values.imageTag }}"
+        image: "quay.io/koli/crafter:v0.1.0-alpha"
         ports:
         - containerPort: 8080
         env:
@@ -50,7 +53,7 @@ spec:
         - name: SLUGRUNNER_IMAGE_NAME
           value: 'quay.io/koli/slugrunner:v0.1.0-alpha'
         - name: S3_HOST
-          value: 10.0.0.25
+          value: objstorage
         - name: S3_PORT
           value: '9000'
         # Will be removed in the future, needed to start the application
@@ -70,7 +73,6 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: api-router
-  namespace: koli-system
 spec:
   replicas: 1
   template:

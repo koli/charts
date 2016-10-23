@@ -1,1 +1,5 @@
 imageTag: "v0.2.0-alpha"
+# This token must have privileges to create RBAC policies
+# The api server must be started with the parameter:
+# --authorization-rbac-super-user=<service-account-user>
+systemToken: 

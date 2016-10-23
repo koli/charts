@@ -56,10 +56,9 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
-  name: minio
+  name: objstorage
   labels:
     app: minio
-  namespace: koli-system
 spec:
   clusterIP: 'None'
   ports:

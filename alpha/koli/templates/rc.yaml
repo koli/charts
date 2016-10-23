@@ -4,7 +4,6 @@ metadata:
   name: minio
   labels:
     app: minio
-  namespace: koli-system
 spec:
   replicas: 1
   selector:
