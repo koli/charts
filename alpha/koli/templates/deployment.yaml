@@ -53,7 +53,7 @@ spec:
         - name: SLUGRUNNER_IMAGE_NAME
           value: 'quay.io/koli/slugrunner'
         - name: S3_HOST
-          value: objstorage
+          value: objstorage.koli-system
         - name: S3_PORT
           value: '9000'
         # Will be removed in the future, needed to start the application
