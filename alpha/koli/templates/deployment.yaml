@@ -36,7 +36,7 @@ spec:
     spec:
       containers:
       - name: crafter
-        image: "quay.io/koli/crafter:v0.1.0-alpha"
+        image: "quay.io/koli/crafter"
         ports:
         - containerPort: 8080
         env:
@@ -47,11 +47,11 @@ spec:
         - name: BUILDER_STORAGE
           value: minio
         - name: SLUGBUILDER_IMAGE_NAME
-          value: 'quay.io/koli/slugbuilder:v0.1.0-alpha'
+          value: 'quay.io/koli/slugbuilder'
         - name: SLUGDEPLOYER_IMAGE_NAME
-          value: 'quay.io/koli/slugdeployer:v0.1.0-alpha'
+          value: 'quay.io/koli/slugdeployer'
         - name: SLUGRUNNER_IMAGE_NAME
-          value: 'quay.io/koli/slugrunner:v0.1.0-alpha'
+          value: 'quay.io/koli/slugrunner'
         - name: S3_HOST
           value: objstorage
         - name: S3_PORT
@@ -82,7 +82,7 @@ spec:
     spec:
       containers:
       - name: api-router
-        image: "quay.io/koli/api-router:{{ .Values.imageTag }}"
+        image: "quay.io/koli/api-router"
         ports:
         - containerPort: 80
         - containerPort: 443
