@@ -29,8 +29,9 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: minio
+  name: minio-svc
 spec:
+  clusterIP: 'None'
   ports:
     - port: 9000
       targetPort: 9000

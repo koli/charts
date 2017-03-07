@@ -78,11 +78,11 @@ spec:
           - name: KONG_PG_HOST
             value: postgres
           - name: KONG_DNS_RESOLVER
-            value: {{default 10.0.0.10 .Values.kongDnsResolver}}
+            value: {{default "10.0.0.10" .Values.kongDnsResolver}}
           - name: KONG_DNSMASQ
             value: "off"
           - name: KONG_ADMIN_LISTEN
-            value: {{default 0.0.0.0:8001 .Values.kongAdminListen}}
+            value: {{default "0.0.0.0:8001" .Values.kongAdminListen}}
         ports:
         - name: admin
           containerPort: 8001
