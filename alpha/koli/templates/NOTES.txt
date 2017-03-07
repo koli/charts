@@ -1,29 +1,3 @@
 Getting Started:
 
-Try one of the quick start guides of heroku:
-https://devcenter.heroku.com/start
-
-1. To authenticate on the platform:
-
-	koli login
-
-2. Create a new namespace
-
-	koli create ns default
-
-3. Create a new deploy and start building an application
-
-	git clone https://github.com/heroku/node-js-getting-started.git
-	cd node-js-getting-started
-	koli create deploy node
-	git push koli master
-
-4. Create a new addon and expose to the 'default' namespace
-
-	koli create addon redis
-	koli create links redis
-
-5. Check it out
-
-	koli get links
-	koli get pods
+TODO

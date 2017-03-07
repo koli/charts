@@ -1,13 +1,13 @@
 apiVersion: v1
 name: koli
-version: v0.2.0-alpha
+version: v0.4.0-alpha
 description: Koli PaaS
 keywords:
 - paas
-home: https://kolibox.io/
+home: https://kolihub.io/
 sources:
-- https://github.com/kolibox/charts
-- https://github.com/kolibox/koli
+- https://github.com/kolihub/charts
+- https://github.com/kolihub/koli
 maintainers:
 - name: Koli Team
   email: engineering@kolibox.io

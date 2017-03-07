@@ -1,88 +1,121 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: controller
+  name: git-server
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app: controller
+        app: git-server
     spec:
       containers:
-      - name: controller
-        image: "quay.io/koli/controller:{{ .Values.imageTag }}"
-        ports:
-        - containerPort: 8000
-        env:
-        - name: PYTHONPATH
-          value: /app
-        - name: SYSTEM_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: systemtoken
-              key: token
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: crafter
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: crafter
-    spec:
-      containers:
-      - name: crafter
-        image: "quay.io/koli/crafter"
+      - name: git-server
+        image: 'quay.io/koli/gitstep:{{default "latest" .Values.gitStepTag}}'
         ports:
         - containerPort: 8080
         env:
-        - name: DEBUG
-          value: 'true'
-        - name: CLUSTER_ID
-          value: git
-        - name: BUILDER_STORAGE
-          value: minio
-        - name: SLUGBUILDER_IMAGE_NAME
-          value: 'quay.io/koli/slugbuilder'
-        - name: SLUGDEPLOYER_IMAGE_NAME
-          value: 'quay.io/koli/slugdeployer'
-        - name: SLUGRUNNER_IMAGE_NAME
-          value: 'quay.io/koli/slugrunner'
-        - name: S3_HOST
-          value: objstorage
-        - name: S3_PORT
-          value: '9000'
-        # Will be removed in the future, needed to start the application
-        - name: LOCAL_OBJECT_STORE_PATH
-          value: /dummy
-        # Will be removed in the future, needed to start the application
-        - name: OBJECT_STORE_PATH
-          value: /dummy
-        - name: ACCESS_KEY
-          value: 8TZRY2JRWMPT6UMXR6I5
-        - name: ACCESS_SECRET_KEY
-          value: gbstrOvotMMcg2sMfGUhA5a6Et/EI5ALtIHsobYk
         - name: GIT_HOME
-          value: /opt
+          value: '{{default "/home/git" .Values.gitStepGitHome}}'
+        - name: KUBERNETES_SERVICE_HOST
+          value: '{{.Values.kubernetesServiceHost}}'
+        - name: KUBERNETES_SERVICE_PORT
+          value: '8080'
+        - name: DEVELOPMENT
+          value: 'TRUE'
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: api-router
+  name: koli-controller
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app: api-router
+        app: koli-controller
     spec:
       containers:
-      - name: api-router
-        image: "quay.io/koli/api-router"
+      - name: koli-controller
+        image: 'quay.io/koli/koli-controller:{{default "latest" .Values.koliControllerTag}}'
+        args:
+        - --apiserver=http://{{.Values.kubernetesServiceHost}}:8080
+        - --logtostderr
+        - --tls-insecure
+        - --access-key=8TZRY2JRWMPT6UMXR6I5
+        - --secret-key=gbstrOvotMMcg2sMfGUhA5a6Et/EI5ALtIHsobYk
+        - --objstorage-host=minio.koli-system
+        - --objstorage-port=9000
+        - --slugbuilder-image=quay.io/koli/slugbuilder:{{default "latest" .Values.slugBuilderTag}}
+        - --cluster-name={{default "gaia" .Values.clusterName}}
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: kong
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: kong
+        app: kong
+    spec:
+      containers:
+      - name: kong
+        image: mashape/kong:0.9.0
+        env:
+          - name: KONG_LOG_LEVEL
+            value: info
+          - name: KONG_DATABASE
+            value: postgres
+          - name: KONG_PG_USER
+            value: kong
+          - name: KONG_PG_DATABASE
+            value: kong
+          - name: KONG_PG_PASSWORD
+            value: kong
+          - name: KONG_PG_HOST
+            value: postgres
+          - name: KONG_DNS_RESOLVER
+            value: {{default 10.0.0.10 .Values.kongDnsResolver}}
+          - name: KONG_DNSMASQ
+            value: "off"
+          - name: KONG_ADMIN_LISTEN
+            value: {{default 0.0.0.0:8001 .Values.kongAdminListen}}
         ports:
-        - containerPort: 80
-        - containerPort: 443
+        - name: admin
+          containerPort: 8001
+          protocol: TCP
+        - name: proxy
+          containerPort: 8000
+          protocol: TCP
+        - name: proxy-ssl
+          containerPort: 8443
+          protocol: TCP
+        - name: surf-tcp
+          containerPort: 7946
+          protocol: TCP
+        - name: surf-udp
+          containerPort: 7946
+          protocol: UDP
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: kong-ingress
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: kong-ingress
+    spec:
+      containers:
+      - name: koli-controller
+        image: quay.io/koli/kong-ingress:{{default "latest" .Values.kongIngressTag}}
+        args:
+        - --apiserver=http://{{.Values.kubernetesServiceHost}}:8080
+        - --kong-server=http://kong-admin:8001
+        - --logtostderr
+        - --tls-insecure

@@ -1,69 +1,87 @@
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: controller
-  labels:
-    app: controller
-  namespace: koli-system
+  name: git-server
 spec:
-  clusterIP: 'None'
   ports:
-  - protocol: TCP
-    port: 8000
-    targetPort: 8000
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: http
   selector:
-    app: controller
+    app: git-server
 ---
-kind: Service
 apiVersion: v1
-metadata:
-  name: crafter
-  labels:
-    app: crafter
-  namespace: koli-system
-spec:
-  clusterIP: 'None'
-  ports:
-  - protocol: TCP
-    port: 8080
-    targetPort: 8080
-  selector:
-    app: crafter
----
 kind: Service
-apiVersion: v1
 metadata:
-  name: api-router
-  labels:
-    app: api-router
-  namespace: koli-system
+  name: git-server-ext
 spec:
   type: NodePort
   ports:
-  - protocol: TCP
-    name: http
-    port: 7080
-    targetPort: 80
-    nodePort: 30080
-  - protocol: TCP
-    name: https
-    port: 6443
-    targetPort: 443
-    nodePort: 30443
+    - name: git-external
+      nodePort: 30800
+      port: 30800
+      targetPort: 8080
+      protocol: TCP
   selector:
-    app: api-router
+    app: git-server
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: objstorage
-  labels:
-    app: minio
+  name: minio
 spec:
-  clusterIP: 'None'
   ports:
-  - protocol: TCP
-    port: 9000
-    targetPort: 9000
+    - port: 9000
+      targetPort: 9000
+      protocol: TCP
+      name: http
   selector:
     app: minio
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kong-proxy
+spec:
+  externalIPs:
+  - {{.Values.kubernetesServiceHost}}
+  ports:
+  - name: kong-proxy
+    port: 8000
+    targetPort: 8000
+    protocol: TCP
+  - name: kong-proxy-ssl
+    port: 7443
+    targetPort: 7443
+    protocol: TCP
+  selector:
+    app: kong
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kong-admin
+spec:
+  externalIPs:
+  - {{.Values.kubernetesServiceHost}}
+  ports:
+  - name: kong-admin
+    port: 8001
+    targetPort: 8001
+    protocol: TCP
+  selector:
+    app: kong
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+spec:
+  ports:
+  - name: pgql
+    port: 5432
+    targetPort: 5432
+    protocol: TCP
+  selector:
+    app: postgres
