@@ -1,0 +1,22 @@
+apiVersion: v1
+entries:
+  koli:
+  - apiVersion: v1
+    created: 2017-03-07T08:44:46.219395869-03:00
+    description: Koli PaaS
+    digest: 925138fed3dc6f244fcdab328a45fc427cd43a2ea246ddef999651e6a9b313d1
+    engine: gotpl
+    home: https://kolihub.io/
+    keywords:
+    - paas
+    maintainers:
+    - email: engineering@kolibox.io
+      name: Koli Team
+    name: koli
+    sources:
+    - https://github.com/kolihub/charts
+    - https://github.com/kolihub/koli
+    urls:
+    - https://kolihub.github.io/charts/alpha/koli/koli-v0.4.0-alpha.tgz
+    version: v0.4.0-alpha
+generated: 2017-03-07T08:44:46.197222614-03:00
