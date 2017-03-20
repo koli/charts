@@ -2,9 +2,9 @@ apiVersion: v1
 entries:
   koli:
   - apiVersion: v1
-    created: 2017-03-19T22:56:59.533381754-03:00
+    created: 2017-03-20T07:18:37.056527367-03:00
     description: Koli PaaS
-    digest: d3c2c707355382c7cb2552a0568b0b5777f3ba0c37c607a3b5dc0790e5a94627
+    digest: d37f9b59144615c2e5ce3681e611960bf62f7805b3058b248e31a88a6c1e92b7
     engine: gotpl
     home: https://kolihub.io/
     keywords:
@@ -20,7 +20,7 @@ entries:
     - https://kolihub.github.io/charts/alpha/koli/koli-v0.5.0-alpha.tgz
     version: v0.5.0-alpha
   - apiVersion: v1
-    created: 2017-03-19T22:56:59.532410279-03:00
+    created: 2017-03-20T07:18:37.056125723-03:00
     description: Koli PaaS
     digest: 925138fed3dc6f244fcdab328a45fc427cd43a2ea246ddef999651e6a9b313d1
     engine: gotpl
@@ -37,4 +37,4 @@ entries:
     urls:
     - https://kolihub.github.io/charts/alpha/koli/koli-v0.4.0-alpha.tgz
     version: v0.4.0-alpha
-generated: 2017-03-19T22:56:59.524280702-03:00
+generated: 2017-03-20T07:18:37.053577181-03:00
