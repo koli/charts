@@ -33,7 +33,7 @@ spec:
         args:
         - --apiserver={{.Values.kubernetesServiceHost}}
         - --platform-secret={{.Values.platformSecret}}
-        - --gitapi-host={{default "http://git-api.koli-system:8001" .Values.gitApiHost}}
+        - --gitapi-host=http://git-api.koli-system:8001
         - --git-home={{default "/home/git" .Values.gitHome}}
         - --logtostderr
         - --tls-insecure
