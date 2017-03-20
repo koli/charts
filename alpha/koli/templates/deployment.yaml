@@ -33,7 +33,7 @@ spec:
         args:
         - --apiserver={{.Values.apiServerHost}}
         - --platform-secret={{.Values.platformSecret}}
-        - --gitapi-host=http://git-api.koli-system:8001
+        - --gitapi-host=http://git-server.koli-system:8000
         - --git-home={{default "/home/git" .Values.gitHome}}
         - --logtostderr
         - --tls-insecure
