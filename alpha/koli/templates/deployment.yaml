@@ -56,7 +56,7 @@ spec:
         - --apiserver={{.Values.apiServerHost}}
         - --slugbuilder-image=quay.io/koli/slugbuilder:{{default "latest" .Values.slugBuilderTag}}
         - --slugrunner-image=quay.io/koli/slugrunner:{{default "latest" .Values.slugRunnerTag}}
-        - --git-release-host=http://git-server.koli-system:8000
+        - --git-release-host=http://git-api.koli-system:8001
         - --cluster-name={{default "gaia" .Values.clusterName}}
         - --logtostderr
         - --tls-insecure
