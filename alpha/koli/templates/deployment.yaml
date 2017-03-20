@@ -1,28 +1,42 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: git-server
+  name: gitstep
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app: git-server
+        app: gitstep
     spec:
       containers:
+      - name: git-api
+        image: 'quay.io/koli/gitstep:{{default "latest" .Values.gitStepTag}}'
+        command:
+        - gitapi
+        args:
+        - --apiserver={{.Values.kubernetesServiceHost}}
+        - --auth0-audience={{.Values.auth0Audience}}
+        - --auth0-id={{.Values.auth0ID}}
+        - --auth0-secret={{.Values.auth0Secret}}
+        - --platform-secret={{.Values.platformSecret}}
+        - --gitapi-host={{.Values.gitApiHost}}
+        - --git-home={{default "/home/git" .Values.gitHome}}
+        - --logtostderr
+        - --tls-insecure
+        ports:
+        - containerPort: 8001
       - name: git-server
         image: 'quay.io/koli/gitstep:{{default "latest" .Values.gitStepTag}}'
-        ports:
-        - containerPort: 8080
-        env:
-        - name: GIT_HOME
-          value: '{{default "/home/git" .Values.gitStepGitHome}}'
-        - name: KUBERNETES_SERVICE_HOST
-          value: '{{.Values.kubernetesServiceHost}}'
-        - name: KUBERNETES_SERVICE_PORT
-          value: '8080'
-        - name: DEVELOPMENT
-          value: 'TRUE'
+        command:
+        - gitserver
+        args:
+        - --apiserver={{.Values.kubernetesServiceHost}}
+        - --platform-secret={{.Values.platformSecret}}
+        - --gitapi-host={{default "http://git-api.koli-system:8001" .Values.gitApiHost}}
+        - --git-home={{default "/home/git" .Values.gitHome}}
+        - --logtostderr
+        - --tls-insecure
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -40,14 +54,12 @@ spec:
         image: 'quay.io/koli/koli-controller:{{default "latest" .Values.koliControllerTag}}'
         args:
         - --apiserver=http://{{.Values.kubernetesServiceHost}}:8080
+        - --slugbuilder-image=quay.io/koli/slugbuilder:{{default "latest" .Values.slugBuilderTag}}
+        - --slugrunner-image=quay.io/koli/slugrunner:{{default "latest" .Values.slugRunnerTag}}
+        - --git-release-host=http://git-server.koli-system:8000
+        - --cluster-name={{default "gaia" .Values.clusterName}}
         - --logtostderr
         - --tls-insecure
-        - --access-key=8TZRY2JRWMPT6UMXR6I5
-        - --secret-key=gbstrOvotMMcg2sMfGUhA5a6Et/EI5ALtIHsobYk
-        - --objstorage-host=minio.koli-system
-        - --objstorage-port=9000
-        - --slugbuilder-image=quay.io/koli/slugbuilder:{{default "latest" .Values.slugBuilderTag}}
-        - --cluster-name={{default "gaia" .Values.clusterName}}
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
