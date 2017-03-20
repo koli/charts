@@ -15,7 +15,7 @@ spec:
         command:
         - gitapi
         args:
-        - --apiserver={{.Values.kubernetesServiceHost}}
+        - --apiserver={{.Values.apiServerHost}}
         - --auth0-audience={{.Values.auth0Audience}}
         - --auth0-id={{.Values.auth0ID}}
         - --auth0-secret={{.Values.auth0Secret}}
@@ -31,7 +31,7 @@ spec:
         command:
         - gitserver
         args:
-        - --apiserver={{.Values.kubernetesServiceHost}}
+        - --apiserver={{.Values.apiServerHost}}
         - --platform-secret={{.Values.platformSecret}}
         - --gitapi-host=http://git-api.koli-system:8001
         - --git-home={{default "/home/git" .Values.gitHome}}
@@ -53,7 +53,7 @@ spec:
       - name: koli-controller
         image: 'quay.io/koli/koli-controller:{{default "latest" .Values.koliControllerTag}}'
         args:
-        - --apiserver=http://{{.Values.kubernetesServiceHost}}
+        - --apiserver=http://{{.Values.apiServerHost}}
         - --slugbuilder-image=quay.io/koli/slugbuilder:{{default "latest" .Values.slugBuilderTag}}
         - --slugrunner-image=quay.io/koli/slugrunner:{{default "latest" .Values.slugRunnerTag}}
         - --git-release-host=http://git-server.koli-system:8000
@@ -127,7 +127,7 @@ spec:
       - name: koli-controller
         image: quay.io/koli/kong-ingress:{{default "latest" .Values.kongIngressTag}}
         args:
-        - --apiserver=http://{{.Values.kubernetesServiceHost}}
+        - --apiserver=http://{{.Values.apiServerHost}}
         - --kong-server=http://kong-admin:8001
         - --logtostderr
         - --tls-insecure
