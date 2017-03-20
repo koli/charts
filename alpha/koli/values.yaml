@@ -1,7 +1,8 @@
 gitStepTag: v0.4.0-alpha
 koliControllerTag: v0.5.0-alpha
 slugBuilderTag: v0.2.0-beta
-kongIngressTag: v0.2.0-beta
+slugRunnerTag: v0.2.0-beta
+kongIngressTag: v0.1.0-alpha
 gitHome: /home/git
 kubernetesServiceHost: 
 auth0Audience:
