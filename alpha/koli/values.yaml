@@ -5,6 +5,7 @@ slugRunnerTag: v0.2.0-beta
 kongIngressTag: v0.1.0-alpha
 gitHome: /home/git
 kubernetesServiceHost: 
+gitApiHost:
 auth0Audience:
 auth0ID:
 auth0Secret:
