@@ -53,7 +53,7 @@ spec:
       - name: koli-controller
         image: 'quay.io/koli/koli-controller:{{default "latest" .Values.koliControllerTag}}'
         args:
-        - --apiserver=http://{{.Values.kubernetesServiceHost}}:8080
+        - --apiserver=http://{{.Values.kubernetesServiceHost}}
         - --slugbuilder-image=quay.io/koli/slugbuilder:{{default "latest" .Values.slugBuilderTag}}
         - --slugrunner-image=quay.io/koli/slugrunner:{{default "latest" .Values.slugRunnerTag}}
         - --git-release-host=http://git-server.koli-system:8000
@@ -127,7 +127,7 @@ spec:
       - name: koli-controller
         image: quay.io/koli/kong-ingress:{{default "latest" .Values.kongIngressTag}}
         args:
-        - --apiserver=http://{{.Values.kubernetesServiceHost}}:8080
+        - --apiserver=http://{{.Values.kubernetesServiceHost}}
         - --kong-server=http://kong-admin:8001
         - --logtostderr
         - --tls-insecure
