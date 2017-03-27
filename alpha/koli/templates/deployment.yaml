@@ -11,30 +11,30 @@ spec:
     spec:
       containers:
       - name: git-api
-        image: 'quay.io/koli/gitstep:{{default "latest" .Values.gitStepTag}}'
+        image: 'quay.io/koli/gitstep:{{.Values.images.gitstep}}'
         command:
         - gitapi
         args:
-        - --apiserver={{.Values.apiServerHost}}
-        - --auth0-audience={{.Values.auth0Audience}}
-        - --auth0-id={{.Values.auth0ID}}
-        - --auth0-secret={{.Values.auth0Secret}}
-        - --platform-secret={{.Values.platformSecret}}
-        - --gitapi-host={{.Values.gitApiHost}}
-        - --git-home={{default "/home/git" .Values.gitHome}}
+        - --apiserver={{.Values.k8s.apiserver}}
+        - --auth0-audience={{.Values.platform.auth0aud}}
+        - --auth0-id={{.Values.platform.auth0id}}
+        - --auth0-secret={{.Values.platform.auth0secret}}
+        - --platform-secret={{.Values.platform.jwtkey}}
+        - --gitapi-host={{.Values.git.apihost}}
+        - --git-home={{.Values.git.homepath}}
         - --logtostderr
         - --tls-insecure
         ports:
         - containerPort: 8001
       - name: git-server
-        image: 'quay.io/koli/gitstep:{{default "latest" .Values.gitStepTag}}'
+        image: 'quay.io/koli/gitstep:{{.Values.images.gitstep}}'
         command:
         - gitserver
         args:
-        - --apiserver={{.Values.apiServerHost}}
-        - --platform-secret={{.Values.platformSecret}}
+        - --apiserver={{.Values.k8s.apiserver}}
+        - --platform-secret={{.Values.platform.jwtkey}}
         - --gitapi-host=http://git-server.koli-system:8000
-        - --git-home={{default "/home/git" .Values.gitHome}}
+        - --git-home={{.Values.git.homepath}}
         - --logtostderr
         - --tls-insecure
 ---
@@ -51,13 +51,13 @@ spec:
     spec:
       containers:
       - name: koli-controller
-        image: 'quay.io/koli/koli-controller:{{default "latest" .Values.koliControllerTag}}'
+        image: 'quay.io/koli/koli-controller:{{.Values.images.kolicontroller}}'
         args:
-        - --apiserver={{.Values.apiServerHost}}
-        - --slugbuilder-image=quay.io/koli/slugbuilder:{{default "latest" .Values.slugBuilderTag}}
-        - --slugrunner-image=quay.io/koli/slugrunner:{{default "latest" .Values.slugRunnerTag}}
+        - --apiserver={{.Values.k8s.apiserver}}
+        - --slugbuilder-image=quay.io/koli/slugbuilder:{{.Values.images.slugbuilder}}
+        - --slugrunner-image=quay.io/koli/slugrunner:{{.Values.images.slugrunner}}
         - --git-release-host=http://git-api.koli-system:8001
-        - --cluster-name={{default "gaia" .Values.clusterName}}
+        - --cluster-name={{.Values.k8s.clustername}}
         - --logtostderr
         - --tls-insecure
 ---
@@ -75,29 +75,32 @@ spec:
     spec:
       containers:
       - name: kong
-        image: mashape/kong:0.9.0
+        image: kong:0.10.0
         env:
           - name: KONG_LOG_LEVEL
             value: info
           - name: KONG_DATABASE
             value: postgres
           - name: KONG_PG_USER
-            value: kong
+            value: {{.Values.kong.db.user}}
           - name: KONG_PG_DATABASE
-            value: kong
+            value: {{.Values.kong.db.name}}
           - name: KONG_PG_PASSWORD
-            value: kong
+            value: {{.Values.kong.db.password}}
           - name: KONG_PG_HOST
-            value: postgres
+            value: postgres.koli-system.{{.Values.k8s.clusterdns}}
           - name: KONG_DNS_RESOLVER
-            value: {{default "10.0.0.10" .Values.kongDnsResolver}}
+            value: {{.Values.k8s.dnsip}}
           - name: KONG_DNSMASQ
             value: "off"
           - name: KONG_ADMIN_LISTEN
-            value: {{default "0.0.0.0:8001" .Values.kongAdminListen}}
+            value: {{.Values.kong.adminlisten}}
         ports:
         - name: admin
           containerPort: 8001
+          protocol: TCP
+        - name: admin-ssl
+          containerPort: 8444
           protocol: TCP
         - name: proxy
           containerPort: 8000
@@ -111,6 +114,71 @@ spec:
         - name: surf-udp
           containerPort: 7946
           protocol: UDP
+      - name: provisoning
+        image: quay.io/koli/base:0.1.0
+        command:
+          - /bin/bash
+          - -c
+          - |
+            #!/bin/bash
+            while true; do
+              curl -s http://127.0.0.1:8001/apis >/dev/null
+              if [[ !$? -eq 0 ]]; then
+                echo 'Kong API is not ready yet!'
+                sleep 5
+                continue
+              fi
+              break
+            done
+            
+            echo "Configuring Kubernetes => {{.Values.kong.bootstrap.k8sapi}}"
+            curl -s -X POST http://127.0.0.1:8001/apis/ \
+                --data "name=kubernetes" \
+                --data "upstream_url=http://{{.Values.k8s.servicehost}}:8080" \
+                --data "hosts={{.Values.kong.bootstrap.k8sapi}}" >/dev/null
+            
+            echo "Configuring CORS Plugin for Kubernetes"
+            curl -s -X POST http://127.0.0.1:8001/apis/kubernetes/plugins \
+                --data "name=cors" \
+                --data "config.origin=*" \
+                --data "config.methods=GET, POST, PATCH" \
+                --data "config.headers=Authorization, Accept, Accept-Version" \
+                --data "config.max_age=3600" >/dev/null
+            
+            echo "Configuring Heapster => {{.Values.kong.bootstrap.heapsterapi}}"
+            curl -s -X POST http://127.0.0.1:8001/apis/ \
+                --data "name=heapster" \
+                --data "upstream_url=http://{{.Values.k8s.servicehost}}:8080/api/v1/proxy/namespaces/kube-system/services/heapster/api/v1/model/" \
+                --data "hosts={{.Values.kong.bootstrap.heapsterapi}}" >/dev/null
+            
+            echo "Configuring CORS Plugin for Heapster"
+            curl -X POST http://127.0.0.1:8001/apis/heapster/plugins \
+                --data "name=cors" \
+                --data "config.origin=*" \
+                --data "config.methods=GET, POST, PATCH" \
+                --data "config.headers=Authorization, Accept, Accept-Version" \
+                --data "config.max_age=3600" >/dev/null
+            
+            echo "Configuring GIT API => {{.Values.kong.bootstrap.gitapi}}"
+            curl -s -X POST http://127.0.0.1:8001/apis/ \
+                --data "name=gitapi" \
+                --data "upstream_url=http://git-api.koli-system.{{.Values.k8s.clusterdns}}:8001" \
+                --data "hosts={{.Values.kong.bootstrap.gitapi}}" >/dev/null
+            
+            echo "Configuring GIT Server => {{.Values.kong.bootstrap.gitserver}}"
+            curl -s -X POST http://127.0.0.1:8001/apis/ \
+                --data "name=gitserver" \
+                --data "upstream_url=http://git-server.koli-system.{{.Values.k8s.clusterdns}}:8000" \
+                --data "hosts={{.Values.kong.bootstrap.gitserver}}" >/dev/null
+            
+            echo "Configuring Kong Admin => {{.Values.kong.bootstrap.kongadminapi}}"
+            curl -s -X POST http://127.0.0.1:8001/apis/ \
+                --data "name=kongadmin" \
+                --data "upstream_url=http://127.0.0.1:8001" \
+                --data "hosts={{.Values.kong.bootstrap.kongadminapi}}" >/dev/null
+            
+            # Sleep forever
+            /bin/bash -c "trap : TERM INT; sleep infinity & wait"
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -125,9 +193,9 @@ spec:
     spec:
       containers:
       - name: koli-controller
-        image: quay.io/koli/kong-ingress:{{default "latest" .Values.kongIngressTag}}
+        image: quay.io/koli/kong-ingress:{{.Values.images.kongingress}}
         args:
-        - --apiserver={{.Values.apiServerHost}}
+        - --apiserver={{.Values.k8s.apiserver}}
         - --kong-server=http://kong-admin:8001
         - --logtostderr
         - --tls-insecure

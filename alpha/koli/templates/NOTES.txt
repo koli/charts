@@ -1,3 +1,17 @@
-Getting Started:
+Koli it's a Plataform as Service (PaaS) built on top of Kubernetes.
+
+Using Koli you'll be able:
+
+- Exposes applications as fully qualified domains
+- Build and deploy applications using git or from GitHub (webhooks)
+- Define plans to restrict the allocation of compute and kubernetes resources
+- Creation of multiple namespaces by user avoiding naming collisions (not ready yet)
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }}
+  $ helm get {{ .Release.Name }}
+
+Quick Start:
 
 TODO

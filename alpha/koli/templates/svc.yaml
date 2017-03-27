@@ -15,22 +15,6 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: git-server-ext
-  namespace: koli-system
-spec:
-  type: NodePort
-  ports:
-    - name: git-external
-      nodePort: 30000
-      port: 30000
-      targetPort: 8000
-      protocol: TCP
-  selector:
-    app: gitstep
----
-apiVersion: v1
-kind: Service
-metadata:
   name: git-api
   namespace: koli-system
 spec:
@@ -45,26 +29,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: git-api-ext
-  namespace: koli-system
-spec:
-  type: NodePort
-  ports:
-    - name: git-api-external
-      nodePort: 30001
-      port: 30001
-      targetPort: 8001
-      protocol: TCP
-  selector:
-    app: gitstep
----
-apiVersion: v1
-kind: Service
-metadata:
   name: kong-proxy
 spec:
   externalIPs:
-  - {{.Values.kubernetesServiceHost}}
+  - {{.Values.k8s.serviceip}}
   ports:
   - name: kong-proxy
     port: 8000
@@ -73,21 +41,6 @@ spec:
   - name: kong-proxy-ssl
     port: 7443
     targetPort: 7443
-    protocol: TCP
-  selector:
-    app: kong
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: kong-admin
-spec:
-  externalIPs:
-  - {{.Values.kubernetesServiceHost}}
-  ports:
-  - name: kong-admin
-    port: 8001
-    targetPort: 8001
     protocol: TCP
   selector:
     app: kong
