@@ -148,7 +148,7 @@ spec:
             echo "Configuring Heapster => {{.Values.kong.bootstrap.heapsterapi}}"
             curl -s -X POST http://127.0.0.1:8001/apis/ \
                 --data "name=heapster" \
-                --data "upstream_url=http://{{.Values.k8s.servicehost}}:8080/api/v1/proxy/namespaces/koli-system/services/heapster/api/v1/model/" \
+                --data "upstream_url=http://heapster.koli-system.{{.Values.k8s.clusterdns}}" \
                 --data "hosts={{.Values.kong.bootstrap.heapsterapi}}" >/dev/null
             
             echo "Configuring CORS Plugin for Heapster"
