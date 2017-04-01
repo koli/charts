@@ -141,22 +141,22 @@ spec:
             curl -s -X POST http://127.0.0.1:8001/apis/kubernetes/plugins \
                 --data "name=cors" \
                 --data "config.origin=*" \
-                --data "config.methods=GET, POST, PATCH" \
-                --data "config.headers=Authorization, Accept, Accept-Version" \
+                --data "config.methods=GET, POST, PUT, PATCH, DELETE" \
+                --data "config.headers=Authorization, Accept, Accept-Version, Content-Type" \
                 --data "config.max_age=3600" >/dev/null
             
             echo "Configuring Heapster => {{.Values.kong.bootstrap.heapsterapi}}"
             curl -s -X POST http://127.0.0.1:8001/apis/ \
                 --data "name=heapster" \
-                --data "upstream_url=http://{{.Values.k8s.servicehost}}:8080/api/v1/proxy/namespaces/kube-system/services/heapster/api/v1/model/" \
+                --data "upstream_url=http://heapster.koli-system.{{.Values.k8s.clusterdns}}" \
                 --data "hosts={{.Values.kong.bootstrap.heapsterapi}}" >/dev/null
             
             echo "Configuring CORS Plugin for Heapster"
             curl -X POST http://127.0.0.1:8001/apis/heapster/plugins \
                 --data "name=cors" \
                 --data "config.origin=*" \
-                --data "config.methods=GET, POST, PATCH" \
-                --data "config.headers=Authorization, Accept, Accept-Version" \
+                --data "config.methods=GET, POST, PUT, PATCH, DELETE" \
+                --data "config.headers=Authorization, Accept, Accept-Version, Content-Type" \
                 --data "config.max_age=3600" >/dev/null
             
             echo "Configuring GIT API => {{.Values.kong.bootstrap.gitapi}}"
@@ -165,6 +165,14 @@ spec:
                 --data "upstream_url=http://git-api.koli-system.{{.Values.k8s.clusterdns}}:8001" \
                 --data "hosts={{.Values.kong.bootstrap.gitapi}}" >/dev/null
             
+            echo "Configuring CORS Plugin for GIT API"
+            curl -X POST http://127.0.0.1:8001/apis/gitapi/plugins \
+                --data "name=cors" \
+                --data "config.origin=*" \
+                --data "config.methods=GET, POST, PUT, PATCH, DELETE" \
+                --data "config.headers=Authorization, Accept, Accept-Version, Content-Type" \
+                --data "config.max_age=3600" >/dev/null
+
             echo "Configuring GIT Server => {{.Values.kong.bootstrap.gitserver}}"
             curl -s -X POST http://127.0.0.1:8001/apis/ \
                 --data "name=gitserver" \
@@ -199,3 +207,91 @@ spec:
         - --kong-server=http://kong-admin:8001
         - --logtostderr
         - --tls-insecure
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: heapster
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        task: monitoring
+        k8s-app: heapster
+    spec:
+      containers:
+      - name: heapster
+        image: gcr.io/google_containers/heapster-amd64:v1.3.0-beta.1
+        imagePullPolicy: IfNotPresent
+        command:
+        - /heapster
+        - --source=kubernetes:https://kubernetes.default
+        - --sink=influxdb:http://monitoring-influxdb:8086
+        - --historical_source=influxdb:http://monitoring-influxdb:8086
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: monitoring-grafana
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        task: monitoring
+        k8s-app: grafana
+    spec:
+      containers:
+      - name: grafana
+        image: gcr.io/google_containers/heapster-grafana-amd64:v4.0.2
+        ports:
+          - containerPort: 3000
+            protocol: TCP
+        volumeMounts:
+        - mountPath: /var
+          name: grafana-storage
+        env:
+        - name: INFLUXDB_HOST
+          value: monitoring-influxdb
+        - name: GRAFANA_PORT
+          value: "3000"
+          # The following env variables are required to make Grafana accessible via
+          # the kubernetes api-server proxy. On production clusters, we recommend
+          # removing these env variables, setup auth for grafana, and expose the grafana
+          # service using a LoadBalancer or a public IP.
+        - name: GF_AUTH_BASIC_ENABLED
+          value: "false"
+        - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: "true"
+        - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+          value: Admin
+        - name: GF_SERVER_ROOT_URL
+          # If you're only using the API Server proxy, set this value instead:
+          # value: /api/v1/proxy/namespaces/koli-system/services/monitoring-grafana/
+          value: /
+      volumes:
+      - name: grafana-storage
+        emptyDir: {}
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: monitoring-influxdb
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        task: monitoring
+        k8s-app: influxdb
+    spec:
+      containers:
+      - name: influxdb
+        image: gcr.io/google_containers/heapster-influxdb-amd64:v1.1.1
+        volumeMounts:
+        - mountPath: /data
+          name: influxdb-storage
+      volumes:
+      - name: influxdb-storage
+        emptyDir: {}
