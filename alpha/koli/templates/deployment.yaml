@@ -183,7 +183,7 @@ spec:
             curl -s -X POST http://127.0.0.1:8001/apis/ \
                 --data "name=kongadmin" \
                 --data "upstream_url=http://127.0.0.1:8001" \
-                --data "hosts={{.Values.kong.bootstrap.kongadminapi}}" >/dev/null
+                --data "hosts={{.Values.kong.bootstrap.kongadminapi}}, kong-admin.koli-system, kong-admin" >/dev/null
             
             # Sleep forever
             /bin/bash -c "trap : TERM INT; sleep infinity & wait"
@@ -203,8 +203,9 @@ spec:
       - name: koli-controller
         image: quay.io/koli/kong-ingress:{{.Values.images.kongingress}}
         args:
+        - --v=4
         - --apiserver={{.Values.k8s.apiserver}}
-        - --kong-server=http://kong-admin:8001
+        - --kong-server=http://kong-admin:8000
         - --logtostderr
         - --tls-insecure
 ---

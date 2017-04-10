@@ -29,6 +29,21 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  name: kong-admin
+spec:
+  externalIPs:
+  - {{.Values.k8s.serviceip}}
+  ports:
+  - name: kong-admin
+    port: 8000
+    targetPort: 8000
+    protocol: TCP
+  selector:
+    app: kong
+---
+apiVersion: v1
+kind: Service
+metadata:
   name: kong-proxy
 spec:
   externalIPs:
